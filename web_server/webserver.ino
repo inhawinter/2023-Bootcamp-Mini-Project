@@ -2,6 +2,7 @@
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include "oled_u8g2.h" // oled display
+#include <ArduinoJson.h> // ArduinoJSON library for JSON manipulation
 
 const char* ssid = "SmartFactory";
 const char* password = "inha4885";
@@ -66,10 +67,16 @@ void handleRootEvent() {
   Tc = T - 273.15;  // celsius
   Tf = (Tc * 9.0/5.0) + 32.0;  // fahrenheit
 
-  String message = "Welcome Inha SmartFactory WebServer!\n\n";
-  message += "Your IP address: " + maskedIP;
-  message = message + "\nTemperature: " + String(Tc) + "C " + "(" + String(Tf) + "F)";
-  server.send(200, "text/plain", message);  // status code 200(OK), format, message
+  StaticJsonDocument<200> jsonDoc;  // create JSON object
+  jsonDoc["message"] = "Welcome Inha SmartFactory WebServer!";
+  jsonDoc["ip_address"] = maskedIP;
+  jsonDoc["temperature_celsius"] = Tc;
+  jsonDoc["temperature_fahrenheit"] = Tf;
+
+  String jsonResponse;  // JSON to string
+  serializeJson(jsonDoc, jsonResponse);
+
+  server.send(200, "application/json", jsonResponse); // status code 200(OK), format, JSON response
 
   Serial.println(clientIP);
   Serial.print(Tc);
